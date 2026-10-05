@@ -60,3 +60,8 @@ $ python -m jtool validate broken.json
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+## 和 jq 的区别
+
+- **零依赖**：只用标准库，装了 Python 3 就能跑，不用额外安装。
+- **功能精简**：只覆盖 fmt/get/keys/validate 四个常用操作，复杂查询还是 jq 更合适。

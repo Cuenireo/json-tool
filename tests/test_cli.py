@@ -141,5 +141,20 @@ class TestCLI(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
 
 
+    def test_del_dict_key(self):
+        r = self.run_jtool("del", "meta", str(self.sample))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn("meta", json.loads(r.stdout))
+
+    def test_del_list_item(self):
+        r = self.run_jtool("del", "tags.0", str(self.sample))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(json.loads(r.stdout)["tags"], ["b"])
+
+    def test_del_missing_key_fails(self):
+        r = self.run_jtool("del", "nope", str(self.sample))
+        self.assertNotEqual(r.returncode, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

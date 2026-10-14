@@ -122,7 +122,46 @@ def build_parser():
     v.add_argument("file", nargs="?", help="JSON 文件，不传则从 stdin 读")
     v.set_defaults(func=cmd_validate)
 
+    d = sub.add_parser("del", help="按点路径删除 key 或列表元素")
+    d.add_argument("path", help="点路径，如 tags.0")
+    d.add_argument("file", nargs="?", help="JSON 文件，不传则从 stdin 读")
+    d.set_defaults(func=cmd_del)
+
     return p
+
+
+def del_path(obj, dotted):
+    """按点路径删除 key 或列表元素。找不到时抛 KeyError。返回修改后的根对象。"""
+    parts = dotted.split(".")
+    cur = obj
+    for part in parts[:-1]:
+        cur = get_path(cur, part)
+    last = parts[-1]
+    if isinstance(cur, list):
+        try:
+            idx = int(last)
+        except ValueError:
+            raise KeyError(f"列表下标必须是数字，得到 {last!r}")
+        try:
+            del cur[idx]
+        except IndexError:
+            raise KeyError(f"列表下标越界：{last}")
+    elif isinstance(cur, dict):
+        if last not in cur:
+            raise KeyError(f"找不到 key：{last!r}")
+        del cur[last]
+    else:
+        raise KeyError(f"无法在 {type(cur).__name__} 上删除：{last!r}")
+    return obj
+
+
+def cmd_del(args):
+    obj = parse(read_text(args.file))
+    try:
+        del_path(obj, args.path)
+    except KeyError as e:
+        raise SystemExit(f"错误：{e}")
+    print(json.dumps(obj, ensure_ascii=False, indent=2))
 
 
 def main(argv=None):
